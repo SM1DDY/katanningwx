@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Katanning WX</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <section class="hero" id="hero">
+      <div>
+        <div class="condition" id="condition">Loading...</div>
+        <div class="temp" id="temp">--.-°C</div>
+        <div class="subline">
+          <span id="feels">Feels --.-°C</span>
+          <span id="dew">Dew --.-°C</span>
+          <span id="humidityHero">Hum --%</span>
+        </div>
+      </div>
+      <div class="icon" id="weatherIcon">🌙</div>
+    </section>
+
+    <section class="grid">
+      <section class="panel">
+        <h2>Weather Overview</h2>
+        <div class="tiles">
+          <div class="tile"><small>Temp</small><strong id="tileTemp">--.-</strong><span>°C</span></div>
+          <div class="tile"><small>Humidity</small><strong id="humidity">--</strong><span>%</span></div>
+          <div class="tile"><small>Pressure</small><strong id="pressure">----</strong><span>hPa</span></div>
+          <div class="tile"><small>Surface</small><strong id="surface">--.-</strong><span>°C</span></div>
+        </div>
+
+        <div class="wind-card">
+          <div class="arrow" id="windArrow">⬆</div>
+          <div>
+            <strong id="wind">-- km/h N</strong>
+            <span id="gust">Gust -- km/h · --°</span>
+          </div>
+        </div>
+
+        <div class="tiles">
+          <div class="tile"><small>Rain Today</small><strong id="rainTotal">--</strong><span>mm</span></div>
+          <div class="tile"><small>Rain Rate</small><strong id="rainRate">--</strong><span>mm/h</span></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Station Health</h2>
+        <div class="tiles">
+          <div class="tile"><small>Lux</small><strong id="lux">--</strong><span>lx</span></div>
+          <div class="tile"><small>UV Index</small><strong id="uv">--</strong><span></span></div>
+          <div class="tile"><small>Solar</small><strong id="solar">--</strong><span>W/m²</span></div>
+          <div class="tile"><small>Battery</small><strong id="battery">--</strong><span>V</span></div>
+        </div>
+
+        <div class="wifi tile wide">
+          <small>WiFi Signal</small>
+          <strong id="wifi">--%</strong>
+          <span id="rssi">RSSI -- dBm</span>
+        </div>
+
+        <div class="badges">
+          <span class="badge good" id="stationStatus">Station Online</span>
+          <span class="badge" id="dewRisk">No Dew Risk</span>
+          <span class="badge" id="frostRisk">No Frost</span>
+        </div>
+
+        <div class="tiles single">
+          <div class="tile"><small>Updated</small><strong id="updated">--</strong><span>local time</span></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="footer-grid">
+      <div class="panel mini">
+        <small>Pressure Trend</small>
+        <strong id="pressureTrend">--</strong>
+      </div>
+      <div class="panel mini">
+        <small>Forecast</small>
+        <strong id="forecast">--</strong>
+      </div>
+    </section>
+
+    <section class="camera-placeholder">
+      <h2>📷 Weather Cam</h2>
+      <p>Camera coming soon</p>
+    </section>
+  </main>
+
+  <script>
+    function byId(id) { return document.getElementById(id); }
+
+    function setText(id, value) {
+      const el = byId(id);
+      if (el) el.textContent = value;
+    }
+
+    function tempColour(temp) {
+      if (temp <= 5) return "#66c7ff";
+      if (temp <= 15) return "#4ea8ff";
+      if (temp <= 28) return "var(--text)";
+      if (temp <= 35) return "#ffb347";
+      return "#ff5c5c";
+    }
+
+    function iconFor(condition, rainRate, forecast) {
+      if (forecast === "Storm Coming") return "⛈️";
+      if (rainRate > 0) return "🌧️";
+      if (condition === "Night") return "🌙";
+      if (condition.includes("Sunny")) return "☀️";
+      if (condition.includes("Bright")) return "🌤️";
+      if (condition.includes("Cloudy")) return "☁️";
+      return "🌦️";
+    }
+
+    function updateHeroClass(data) {
+      const hero = byId("hero");
+      hero.classList.remove("rain", "storm", "sunny", "night");
+      if (data.forecast === "Storm Coming") hero.classList.add("storm");
+      else if (Number(data.rain_rate) > 0) hero.classList.add("rain");
+      else if (data.condition === "Night") hero.classList.add("night");
+      else if ((data.condition || "").includes("Sunny")) hero.classList.add("sunny");
+    }
+
+    async function loadWeather() {
+      try {
+        const res = await fetch("weather.json?cache=" + Date.now());
+        const data = await res.json();
+
+        const temp = Number(data.temperature);
+        const humidity = Number(data.humidity);
+        const wind = Number(data.wind_speed);
+        const feels = temp + ((humidity - 50) / 20) - ((wind || 0) / 18);
+
+        setText("condition", data.condition ?? "Unknown");
+        setText("temp", `${temp.toFixed(1)}°C`);
+        byId("temp").style.color = tempColour(temp);
+        setText("feels", `Feels ${feels.toFixed(1)}°C`);
+        setText("dew", `Dew ${Number(data.dew_point).toFixed(1)}°C`);
+        setText("humidityHero", `Hum ${humidity.toFixed(0)}%`);
+        setText("weatherIcon", iconFor(data.condition ?? "", Number(data.rain_rate), data.forecast));
+
+        setText("tileTemp", temp.toFixed(1));
+        setText("humidity", humidity.toFixed(1));
+        setText("pressure", Number(data.pressure).toFixed(1));
+        setText("surface", Number(data.surface_temp).toFixed(1));
+
+        setText("wind", `${wind.toFixed(1)} km/h ${data.wind_direction_text}`);
+        setText("gust", `Gust ${Number(data.wind_gust).toFixed(1)} km/h · ${Number(data.wind_direction_deg).toFixed(0)}°`);
+        byId("windArrow").style.transform = `rotate(${Number(data.wind_direction_deg)}deg)`;
+
+        setText("rainTotal", Number(data.rain_total).toFixed(2));
+        setText("rainRate", Number(data.rain_rate).toFixed(2));
+        setText("lux", Number(data.lux).toFixed(1));
+        setText("uv", Number(data.uv_index).toFixed(2));
+        setText("solar", Number(data.solar_radiation).toFixed(1));
+        setText("battery", Number(data.battery_voltage).toFixed(2));
+        setText("wifi", `${Number(data.wifi_quality).toFixed(0)}%`);
+        setText("rssi", `RSSI ${data.wifi_rssi} dBm`);
+        setText("pressureTrend", data.pressure_trend ?? "--");
+        setText("forecast", data.forecast ?? "--");
+
+        setText("stationStatus", data.station_online ? "Station Online" : "Station Offline");
+        byId("stationStatus").className = data.station_online ? "badge good" : "badge bad";
+        setText("dewRisk", data.dew_risk ? "Dew Risk" : "No Dew Risk");
+        setText("frostRisk", data.frost_now ? "Frost Now" : (data.frost_risk ? "Frost Risk" : "No Frost"));
+
+        const updated = data.updated ? new Date(data.updated) : new Date();
+        setText("updated", updated.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}));
+
+        updateHeroClass(data);
+      } catch (err) {
+        setText("condition", "Data offline");
+        console.error(err);
+      }
+    }
+
+    loadWeather();
+    setInterval(loadWeather, 30000);
+  </script>
+</body>
+</html>
