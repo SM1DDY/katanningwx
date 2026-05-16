@@ -1,7 +1,7 @@
 {
   "updated": "2026-05-17T00:30:00+08:00",
-  "condition": "GitHub Linked Test"
-  "temperature": 16.1,
+  "condition": "Night"
+  "temperature": 100,
   "humidity": 79.4,
   "pressure": 983.0,
   "surface_temp": 16.6,
