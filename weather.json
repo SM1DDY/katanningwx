@@ -1,5 +1,5 @@
 {
-  "updated": "2026-05-17T18:55:00.356540",
+  "updated": "2026-05-17T19:00:00.345251",
   "condition": "Very Cloudy",
   "temperature": 0.0,
   "humidity": 0.0,
@@ -16,8 +16,8 @@
   "uv_index": 0.0,
   "solar_radiation": 0.0,
   "battery_voltage": 13.13,
-  "wifi_quality": 42.0,
-  "wifi_rssi": -79.0,
+  "wifi_quality": 34.0,
+  "wifi_rssi": -83.0,
   "pressure_trend": "Falling",
   "forecast": "Changeable",
   "station_online": true,
